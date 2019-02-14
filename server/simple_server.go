@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"runtime/debug"
 
-	"github.com/gorilla/mux"
 	"github.com/prometheus/client_golang/prometheus"
 	netContext "golang.org/x/net/context"
 )
@@ -24,7 +23,7 @@ type SimpleServer struct {
 	exit chan chan error
 
 	// mux for routing
-	mux *mux.Router
+	mux Service
 
 	// tracks active requests
 	monitor *ActivityMonitor
@@ -151,25 +150,22 @@ func (s *SimpleServer) Stop() error {
 
 // Register lets you by pass server.Service interface
 // and let the user register their own handlers
-func (s *SimpleServer) Register(r *mux.Router) error {
+func (s *SimpleServer) Register(srv Service) error {
 	// check multiple register call error
 	if s.registered {
 		return ErrMultiRegister
 	}
 	// set registered to true because we called it
 	s.registered = true
-	s.mux = r
+	s.mux = srv
 
-	if s.cfg.NotFoundHandler != nil {
-		s.mux.NotFoundHandler = s.cfg.NotFoundHandler
-	}
-
-	RegisterProfiler(s.cfg, r)
+	RegisterProfiler(s.cfg, srv)
 
 	if s.cfg.MetricsPath == "" {
 		s.cfg.MetricsPath = "/metrics"
 	}
-	r.HandleFunc(
+	srv.Register(
+		"GET",
 		s.cfg.MetricsPath,
 		prometheus.InstrumentHandler(
 			"prometheus",

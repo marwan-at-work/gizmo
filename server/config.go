@@ -72,9 +72,6 @@ type Config struct {
 	// TLSKeyFile is an optional string for enabling TLS in simple servers.
 	TLSKeyFile *string `envconfig:"TLS_KEY"`
 
-	// NotFoundHandler will override the default server NotfoundHandler if set.
-	NotFoundHandler http.Handler
-
 	// Enable pprof Profiling. Off by default.
 	EnablePProf bool `envconfig:"ENABLE_PPROF"`
 
